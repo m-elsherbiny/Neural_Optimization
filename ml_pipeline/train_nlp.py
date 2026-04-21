@@ -26,7 +26,7 @@ def train_model():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
     print("Building TF-IDF + MLPClassifier (Neural Network) pipeline...")
-    print("  Architecture: TF-IDF(1,2-grams) → Dense(128, ReLU) → Dense(64, ReLU) → Softmax(6)")
+    print("  Architecture: TF-IDF(1,2-grams) -> Dense(128, ReLU) -> Dense(64, ReLU) -> Softmax(6)")
     print("  Solver: Adam | Max iterations: 500 | Early stopping: enabled")
     
     pipeline = Pipeline([
