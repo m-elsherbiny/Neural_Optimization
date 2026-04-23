@@ -102,8 +102,12 @@ def optimize_budget(incomes: List[Income], expenses: List[Expense], goals: List[
             weight = g.priority * urgency * favourite_bonus
             objective_terms.append(goal_vars[g.id] * weight)
         
+        # To ensure the user always has a safe daily spend allowance, we mathematically cap 
+        # the total savings allocation to 80% of their disposable income.
+        max_savings_pool = disposable_income * 0.80
+        
         prob += pulp.lpSum(objective_terms)
-        prob += pulp.lpSum([goal_vars[g.id] for g in active_goals]) <= disposable_income
+        prob += pulp.lpSum([goal_vars[g.id] for g in active_goals]) <= max_savings_pool
         prob.solve(pulp.PULP_CBC_CMD(msg=0))
         
         for g in active_goals:

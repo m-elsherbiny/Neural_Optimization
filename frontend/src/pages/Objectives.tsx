@@ -9,19 +9,10 @@ import { Calendar, Plus, Trash2, Pencil, PiggyBank, Check, X, CheckCircle, Star 
 import { useState, useEffect } from 'react';
 import { Page } from '../types';
 import { useI18n } from '../lib/i18n';
-import { GOAL_ICONS } from '../lib/categories';
+import { GOAL_ICONS, GOAL_COLORS, getGoalColor } from '../lib/categories';
 import { getGoalIcon } from '../lib/goalIcons';
-
-const GOAL_COLORS = [
-  { name: 'Emerald', hex: '#059669', light: '#ecfdf5', border: '#a7f3d0' },
-  { name: 'Blue', hex: '#2563eb', light: '#eff6ff', border: '#bfdbfe' },
-  { name: 'Purple', hex: '#9333ea', light: '#faf5ff', border: '#d8b4fe' },
-  { name: 'Orange', hex: '#f97316', light: '#fff7ed', border: '#fed7aa' },
-  { name: 'Rose', hex: '#f43f5e', light: '#fff1f2', border: '#fecdd3' },
-  { name: 'Teal', hex: '#14b8a6', light: '#f0fdfa', border: '#99f6e4' },
-  { name: 'Amber', hex: '#f59e0b', light: '#fffbeb', border: '#fde68a' },
-  { name: 'Indigo', hex: '#4f46e5', light: '#eef2ff', border: '#c7d2fe' },
-];
+import { DatePickerSimple } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
 
 interface Goal {
   id: number; name: string; target_amount: number; current_amount: number;
@@ -29,11 +20,6 @@ interface Goal {
 }
 interface ObjectivesProps { onPageChange: (page: Page) => void; }
 
-function getGoalColor(id: number) {
-  const stored = localStorage.getItem(`goal_color_${id}`);
-  if (stored) { const found = GOAL_COLORS.find(c => c.name === stored); if (found) return found; }
-  return GOAL_COLORS[id % GOAL_COLORS.length];
-}
 function setGoalColorLS(id: number, colorName: string) { localStorage.setItem(`goal_color_${id}`, colorName); }
 
 export default function Objectives({ onPageChange }: ObjectivesProps) {
@@ -42,13 +28,13 @@ export default function Objectives({ onPageChange }: ObjectivesProps) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState(''); const [targetAmount, setTargetAmount] = useState('');
-  const [currentAmount, setCurrentAmount] = useState(''); const [deadline, setDeadline] = useState('');
+  const [currentAmount, setCurrentAmount] = useState(''); const [deadline, setDeadline] = useState<Date | undefined>();
   const [selectedColor, setSelectedColor] = useState(GOAL_COLORS[0].name);
   const [selectedIcon, setSelectedIcon] = useState('target');
   const [saving, setSaving] = useState(false); const [success, setSuccess] = useState(false); const [error, setError] = useState('');
   const [addMoneyId, setAddMoneyId] = useState<number | null>(null); const [addMoneyAmount, setAddMoneyAmount] = useState('');
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-  const [editName, setEditName] = useState(''); const [editTarget, setEditTarget] = useState(''); const [editDeadline, setEditDeadline] = useState('');
+  const [editName, setEditName] = useState(''); const [editTarget, setEditTarget] = useState(''); const [editDeadline, setEditDeadline] = useState<Date | undefined>();
   const [colorPickerId, setColorPickerId] = useState<number | null>(null);
 
   const fetchGoals = () => {
@@ -66,13 +52,13 @@ export default function Objectives({ onPageChange }: ObjectivesProps) {
         body: JSON.stringify({
           name, target_amount: parseFloat(targetAmount),
           current_amount: parseFloat(currentAmount || '0'),
-          deadline: deadline || null,
+          deadline: deadline ? format(deadline, 'yyyy-MM-dd') : null,
           priority: 1, is_favourite: false, icon: selectedIcon
         })
       });
       if (res.ok) {
         const created = await res.json(); setGoalColorLS(created.id, selectedColor);
-        setSuccess(true); setName(''); setTargetAmount(''); setCurrentAmount(''); setDeadline(''); setSelectedIcon('target');
+        setSuccess(true); setName(''); setTargetAmount(''); setCurrentAmount(''); setDeadline(undefined); setSelectedIcon('target');
         setTimeout(() => { setSuccess(false); setShowForm(false); fetchGoals(); }, 800);
       } else { setError('Failed to create goal.'); }
     } catch { setError(t('smart.backendError')); }
@@ -115,7 +101,7 @@ export default function Objectives({ onPageChange }: ObjectivesProps) {
     } catch {}
   };
 
-  const openEdit = (goal: Goal) => { setEditingGoal(goal); setEditName(goal.name); setEditTarget(String(goal.target_amount)); setEditDeadline(goal.deadline || ''); };
+  const openEdit = (goal: Goal) => { setEditingGoal(goal); setEditName(goal.name); setEditTarget(String(goal.target_amount)); setEditDeadline(goal.deadline ? new Date(goal.deadline) : undefined); };
   const handleSaveEdit = async () => {
     if (!editingGoal) return;
     try {
@@ -124,7 +110,7 @@ export default function Objectives({ onPageChange }: ObjectivesProps) {
         body: JSON.stringify({
           name: editName, target_amount: parseFloat(editTarget),
           current_amount: editingGoal.current_amount,
-          deadline: editDeadline || null,
+          deadline: editDeadline ? format(editDeadline, 'yyyy-MM-dd') : null,
           priority: editingGoal.priority, is_favourite: editingGoal.is_favourite,
           icon: editingGoal.icon
         })
@@ -152,7 +138,7 @@ export default function Objectives({ onPageChange }: ObjectivesProps) {
           <form onSubmit={handleCreateGoal} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>{t('goals.goalName')}</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Emergency Fund" /></div>
-              <div className="space-y-2"><Label>{t('goals.deadline')}</Label><Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} /></div>
+              <div className="space-y-2"><Label>{t('goals.deadline')}</Label><DatePickerSimple date={deadline} setDate={setDeadline} className="w-full" /></div>
               <div className="space-y-2"><Label>{t('goals.targetAmount')}</Label><Input type="number" step="0.01" value={targetAmount} onChange={e => setTargetAmount(e.target.value)} placeholder="10000" /></div>
               <div className="space-y-2"><Label>{t('goals.currentlySaved')}</Label><Input type="number" step="0.01" value={currentAmount} onChange={e => setCurrentAmount(e.target.value)} placeholder="0" /></div>
             </div>
@@ -201,7 +187,7 @@ export default function Objectives({ onPageChange }: ObjectivesProps) {
             <div className="space-y-2"><Label>{t('goals.name')}</Label><Input value={editName} onChange={e => setEditName(e.target.value)} /></div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>{t('goals.target')}</Label><Input type="number" step="0.01" value={editTarget} onChange={e => setEditTarget(e.target.value)} /></div>
-              <div className="space-y-2"><Label>{t('goals.deadline')}</Label><Input type="date" value={editDeadline} onChange={e => setEditDeadline(e.target.value)} /></div>
+              <div className="space-y-2"><Label>{t('goals.deadline')}</Label><DatePickerSimple date={editDeadline} setDate={setEditDeadline} className="w-full" /></div>
             </div>
           </div>
           <DialogFooter>
@@ -217,10 +203,11 @@ export default function Objectives({ onPageChange }: ObjectivesProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {goals.map(obj => {
             const progress = obj.target_amount > 0 ? Math.min(Math.round((obj.current_amount / obj.target_amount) * 100), 100) : 0;
-            const color = getGoalColor(obj.id);
+            const isDark = document.documentElement.classList.contains('dark');
+            const color = getGoalColor(obj.id, isDark);
             const GoalIcon = getGoalIcon(obj.icon || 'target');
             return (
-              <Card key={obj.id} className="relative group overflow-visible hover:shadow-md transition-shadow">
+              <Card key={obj.id} className={`relative group overflow-visible hover:shadow-md transition-shadow ${obj.is_favourite ? 'md:col-span-2' : ''}`}>
                 {/* Favourite indicator */}
                 {obj.is_favourite && (
                   <div className="absolute -top-2 -right-2 z-10">
@@ -244,7 +231,7 @@ export default function Objectives({ onPageChange }: ObjectivesProps) {
 
                 <div className="p-5 space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: color.light }}>
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: color.bg }}>
                       <GoalIcon className="w-5 h-5" style={{ color: color.hex }} />
                     </div>
                     <div className="text-right">

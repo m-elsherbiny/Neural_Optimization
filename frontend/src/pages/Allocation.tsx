@@ -10,7 +10,7 @@ import { Briefcase, Plus, Trash2, Target, TrendingUp, AlertTriangle, CheckCircle
 import { useState, useEffect } from 'react';
 import { Page } from '../types';
 import { useI18n } from '../lib/i18n';
-import { getIncomeTypeConfig } from '../lib/categories';
+import { getIncomeTypeConfig, getGoalColor } from '../lib/categories';
 import { getGoalIcon } from '../lib/goalIcons';
 
 interface GoalAllocation {
@@ -99,12 +99,12 @@ export default function Allocation({ onPageChange }: AllocationProps) {
               return (
                 <div key={inc.id} className="flex items-center justify-between rounded-lg border px-4 py-3 group">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-md flex items-center justify-center" style={{ background: typeConfig.bgColor }}>
+                    <div className={`w-9 h-9 rounded-md flex items-center justify-center ${typeConfig.bgClass}`}>
                       <TypeIcon className="w-4 h-4" style={{ color: typeConfig.color }} />
                     </div>
                     <div>
                       <p className="font-medium text-sm">{inc.source}</p>
-                      <p className="text-xs text-muted-foreground">{inc.type} · {inc.frequency}</p>
+                      <p className="text-xs text-muted-foreground">{t('income.' + inc.type)} · {t('freq.' + inc.frequency)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -133,7 +133,7 @@ export default function Allocation({ onPageChange }: AllocationProps) {
                       <Select value={incType} onValueChange={setIncType}>
                         <SelectTrigger><SelectValue placeholder={t('alloc.selectType')} /></SelectTrigger>
                         <SelectContent>
-                          {INCOME_TYPES.map(tp => <SelectItem key={tp} value={tp}>{tp}</SelectItem>)}
+                          {INCOME_TYPES.map(tp => <SelectItem key={tp} value={tp} className="cursor-pointer">{t('income.' + tp)}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -142,7 +142,7 @@ export default function Allocation({ onPageChange }: AllocationProps) {
                       <Select value={frequency} onValueChange={setFrequency}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          {FREQUENCIES.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                          {FREQUENCIES.map(f => <SelectItem key={f} value={f} className="cursor-pointer">{t('freq.' + f)}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -170,11 +170,13 @@ export default function Allocation({ onPageChange }: AllocationProps) {
             <CardContent className="space-y-3">
               {data.goal_allocations.map(alloc => {
                 const GoalIcon = getGoalIcon(alloc.icon || 'target');
+                const isDark = document.documentElement.classList.contains('dark');
+                const goalColor = getGoalColor(alloc.goal_id, isDark);
                 return (
-                  <div key={alloc.goal_id} className="flex items-center justify-between rounded-lg border bg-primary/5 border-primary/20 px-4 py-3">
+                  <div key={alloc.goal_id} className="flex items-center justify-between rounded-lg border px-4 py-3" style={{ backgroundColor: goalColor.bg, borderColor: goalColor.border }}>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <GoalIcon className="w-4 h-4 text-primary" />
+                      <div className="w-8 h-8 rounded-lg bg-background/50 flex items-center justify-center">
+                        <GoalIcon className="w-4 h-4" style={{ color: goalColor.hex }} />
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
@@ -182,12 +184,12 @@ export default function Allocation({ onPageChange }: AllocationProps) {
                           {alloc.is_favourite && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {t('alloc.savePerDay')} <span className="font-semibold text-primary">${alloc.allocated_daily}{t('alloc.perDay')}</span> · ~{alloc.months_to_target} {t('alloc.monthsToTarget')}
+                          {t('alloc.savePerDay')} <span className="font-semibold" style={{ color: goalColor.hex }}>${alloc.allocated_daily}{t('alloc.perDay')}</span> · ~{alloc.months_to_target} {t('alloc.monthsToTarget')}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-bold text-primary">${alloc.allocated_monthly}</p>
+                      <p className="text-xl font-bold" style={{ color: goalColor.hex }}>${alloc.allocated_monthly}</p>
                       <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{t('alloc.perMonth')}</p>
                     </div>
                   </div>

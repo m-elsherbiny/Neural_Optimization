@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Wallet, Target, ReceiptText, Plus, Sparkles, Moon, Sun, Info, Languages
+  Wallet, Target, ReceiptText, Plus, Sparkles, Moon, Sun, Info, Languages, PieChart
 } from 'lucide-react';
 import { Page } from '../types';
 import { useI18n } from '../lib/i18n';
@@ -18,6 +18,7 @@ export default function Sidebar({ currentPage, onPageChange, darkMode, onToggleD
 
   const navItems = [
     { id: 'SmartInput' as Page, label: t('nav.smartInput'), icon: Sparkles },
+    { id: 'Limits' as Page, label: t('nav.limits'), icon: PieChart },
     { id: 'Allocation' as Page, label: t('nav.allocation'), icon: Wallet },
     { id: 'MyGoals' as Page, label: t('nav.myGoals'), icon: Target },
     { id: 'Transactions' as Page, label: t('nav.transactions'), icon: ReceiptText },

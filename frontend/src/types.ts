@@ -3,4 +3,4 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type Page = 'Allocation' | 'MyGoals' | 'Transactions' | 'NewEntry' | 'SmartInput' | 'About';
+export type Page = 'Allocation' | 'MyGoals' | 'Transactions' | 'NewEntry' | 'SmartInput' | 'About' | 'Limits';

@@ -6,10 +6,14 @@ import { Trash2, Pencil, X, Check, CalendarDays } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useI18n } from '../lib/i18n';
 import { getCategoryConfig, ALL_CATEGORIES } from '../lib/categories';
+import { DatePickerWithRange } from '@/components/ui/date-picker';
+import { type DateRange } from 'react-day-picker';
+import { format } from 'date-fns';
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell,
   AreaChart, Area, CartesianGrid,
 } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 
 interface Expense { id: number; note: string | null; amount: number; date: string; category: string; }
 
@@ -17,9 +21,8 @@ export default function Ledger() {
   const { t } = useI18n();
   const [transactions, setTransactions] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterCategory, setFilterCategory] = useState<string>('All');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [filterCategories, setFilterCategories] = useState<string[]>([]);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editNote, setEditNote] = useState(''); const [editAmount, setEditAmount] = useState(''); const [editCategory, setEditCategory] = useState('');
 
@@ -28,17 +31,17 @@ export default function Ledger() {
   };
   useEffect(() => { fetchTransactions(); }, []);
 
-  const categories = useMemo(() => { const cats = new Set(transactions.map(tx => tx.category)); return ['All', ...Array.from(cats)]; }, [transactions]);
+  const categories = useMemo(() => { const cats = new Set(transactions.map(tx => tx.category)); return Array.from(cats); }, [transactions]);
   const filtered = useMemo(() => {
     let result = transactions;
-    if (filterCategory !== 'All') result = result.filter(tx => tx.category === filterCategory);
-    if (dateFrom) result = result.filter(tx => tx.date >= dateFrom);
-    if (dateTo) result = result.filter(tx => tx.date <= dateTo);
+    if (filterCategories.length > 0) result = result.filter(tx => filterCategories.includes(tx.category));
+    if (dateRange?.from) result = result.filter(tx => tx.date >= format(dateRange.from, 'yyyy-MM-dd'));
+    if (dateRange?.to) result = result.filter(tx => tx.date <= format(dateRange.to, 'yyyy-MM-dd'));
     return result;
-  }, [transactions, filterCategory, dateFrom, dateTo]);
+  }, [transactions, filterCategories, dateRange]);
 
   const totalSpent = filtered.reduce((s, tx) => s + tx.amount, 0);
-  const hasDateFilter = dateFrom || dateTo;
+  const hasDateFilter = !!dateRange?.from || !!dateRange?.to;
 
   // Chart data: category breakdown
   const categoryBreakdown = useMemo(() => {
@@ -46,8 +49,8 @@ export default function Ledger() {
     filtered.forEach(tx => { map[tx.category] = (map[tx.category] || 0) + tx.amount; });
     return Object.entries(map)
       .map(([cat, amount]) => ({
-        name: cat,
-        amount: Math.round(amount * 100) / 100,
+      name: t('cat.' + cat),
+      amount: Math.round(amount * 100) / 100,
         pct: totalSpent > 0 ? Math.round((amount / totalSpent) * 100) : 0,
         fill: getCategoryConfig(cat).chartColor,
       }))
@@ -85,6 +88,16 @@ export default function Ledger() {
     } catch {}
   };
 
+  const chartConfig = useMemo(() => {
+    const config: ChartConfig = {
+      amount: { label: t('ledger.amount') || 'Amount' }
+    };
+    categoryBreakdown.forEach(cat => {
+      config[cat.name] = { label: cat.name, color: cat.fill };
+    });
+    return config;
+  }, [categoryBreakdown, t]);
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Stats */}
@@ -106,7 +119,7 @@ export default function Ledger() {
         <Card className="relative overflow-hidden">
           <CardContent className="pt-5 pb-4">
             <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest mb-2">{t('ledger.categories')}</p>
-            <p className="text-4xl font-extrabold tracking-tight">{categories.length - 1}</p>
+            <p className="text-4xl font-extrabold tracking-tight">{categories.length}</p>
           </CardContent>
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500/40 to-purple-500/10" />
         </Card>
@@ -121,21 +134,27 @@ export default function Ledger() {
               <CardTitle className="text-sm">{t('ledger.expenseBreakdown')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={categoryBreakdown} layout="vertical" margin={{ left: 0, right: 16, top: 4, bottom: 4 }}>
-                  <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 11 }} />
-                  <Tooltip
-                    formatter={(value: number | string) => [`$${value}`, '']}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--popover)', color: 'var(--popover-foreground)' }}
+              <ChartContainer config={chartConfig}>
+                <BarChart accessibilityLayer data={categoryBreakdown}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                    tickFormatter={(value) => value.slice(0, 10)}
                   />
-                  <Bar dataKey="amount" radius={[0, 6, 6, 0]}>
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent hideLabel nameKey="name" indicator="dashed" />}
+                  />
+                  <Bar dataKey="amount" radius={4}>
                     {categoryBreakdown.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                   </Bar>
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
 
@@ -145,15 +164,18 @@ export default function Ledger() {
               <CardTitle className="text-sm">{t('ledger.spendingOverTime')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={220}>
+              <ChartContainer config={{}} className="h-[220px] w-full">
                 <AreaChart data={areaData} margin={{ left: 0, right: 16, top: 4, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--popover)', color: 'var(--popover-foreground)' }} />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dot" />}
+                  />
                   {areaCats.map(cat => (
                     <Area
-                      key={cat} type="monotone" dataKey={cat}
+                      key={cat} name={t('cat.' + cat)} type="monotone" dataKey={cat}
                       stackId="1"
                       stroke={getCategoryConfig(cat).chartColor}
                       fill={getCategoryConfig(cat).chartColor}
@@ -161,7 +183,7 @@ export default function Ledger() {
                     />
                   ))}
                 </AreaChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         </div>
@@ -170,27 +192,35 @@ export default function Ledger() {
       {/* Filters */}
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">
+          <Badge 
+            variant={filterCategories.length === 0 ? 'default' : 'outline'}
+            className="cursor-pointer hover:bg-primary/10 transition-colors gap-1.5"
+            onClick={() => setFilterCategories([])}
+          >
+            {t('ledger.all')}
+          </Badge>
           {categories.map(cat => {
-            const config = cat !== 'All' ? getCategoryConfig(cat) : null;
-            const CatIcon = config?.icon;
+            const config = getCategoryConfig(cat);
+            const CatIcon = config.icon;
+            const isSelected = filterCategories.includes(cat);
             return (
-              <Badge key={cat} variant={filterCategory === cat ? 'default' : 'outline'}
+              <Badge key={cat} variant={isSelected ? 'default' : 'outline'}
                 className="cursor-pointer hover:bg-primary/10 transition-colors gap-1.5"
-                style={filterCategory === cat && config ? { backgroundColor: config.color, borderColor: config.color } : undefined}
-                onClick={() => setFilterCategory(cat)}>
-                {CatIcon && <CatIcon className="w-3 h-3" />}
-                {cat === 'All' ? t('ledger.all') : cat}
-                {filterCategory === cat && cat !== 'All' && <X className="w-3 h-3 ml-1" onClick={(e) => { e.stopPropagation(); setFilterCategory('All'); }} />}
+                style={isSelected ? { backgroundColor: config.color, borderColor: config.color } : undefined}
+                onClick={() => {
+                  if (isSelected) setFilterCategories(prev => prev.filter(c => c !== cat));
+                  else setFilterCategories(prev => [...prev, cat]);
+                }}>
+                <CatIcon className="w-3 h-3" />
+                {t('cat.' + cat)}
+                {isSelected && <X className="w-3 h-3 ml-1" onClick={(e) => { e.stopPropagation(); setFilterCategories(prev => prev.filter(c => c !== cat)); }} />}
               </Badge>
             );
           })}
         </div>
         <div className="flex items-center gap-3">
-          <CalendarDays className="w-4 h-4 text-muted-foreground" />
-          <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-40 h-8 text-xs" />
-          <span className="text-muted-foreground text-xs">→</span>
-          <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-40 h-8 text-xs" />
-          {hasDateFilter && <Button variant="ghost" size="sm" className="text-destructive text-xs h-7" onClick={() => { setFilterCategory('All'); setDateFrom(''); setDateTo(''); }}>{t('ledger.clear')}</Button>}
+          <DatePickerWithRange date={dateRange} setDate={setDateRange} className="w-64" />
+          {(hasDateFilter || filterCategories.length > 0) && <Button variant="ghost" size="sm" className="text-destructive text-xs h-7" onClick={() => { setFilterCategories([]); setDateRange(undefined); }}>{t('ledger.clear')}</Button>}
         </div>
       </div>
 
@@ -215,7 +245,7 @@ export default function Ledger() {
                ) : (
                  <>
                    <div className="flex items-center gap-4">
-                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: catConfig.bgColor }}>
+                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${catConfig.bgClass}`}>
                        <CatIcon className="w-5 h-5" style={{ color: catConfig.color }} />
                      </div>
                      <div>
@@ -223,7 +253,7 @@ export default function Ledger() {
                        <div className="flex items-center gap-2 mt-0.5">
                          <span className="text-xs text-muted-foreground">{tx.date}</span>
                          <Badge variant="outline" className="text-[10px] h-4 gap-1" style={{ borderColor: catConfig.borderColor, color: catConfig.color }}>
-                           {tx.category}
+                           {t('cat.' + tx.category)}
                          </Badge>
                        </div>
                      </div>

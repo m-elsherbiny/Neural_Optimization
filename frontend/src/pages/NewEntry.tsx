@@ -11,6 +11,8 @@ import { useState } from 'react';
 import { Page } from '../types';
 import { useI18n } from '../lib/i18n';
 import { ALL_CATEGORIES, getCategoryConfig } from '../lib/categories';
+import { DatePickerSimple } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
 
 interface NewEntryProps { onPageChange: (page: Page) => void; }
 
@@ -19,7 +21,7 @@ export default function NewEntry({ onPageChange }: NewEntryProps) {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [note, setNote] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -33,7 +35,7 @@ export default function NewEntry({ onPageChange }: NewEntryProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: parseFloat(amount), category, date, note: note || undefined,
+          amount: parseFloat(amount), category, date: date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0], note: note || undefined,
           is_essential: ['Housing', 'Utilities', 'Food', 'Healthcare'].includes(category),
           is_recurring: category === 'Subscription'
         })
@@ -68,10 +70,10 @@ export default function NewEntry({ onPageChange }: NewEntryProps) {
                     const config = getCategoryConfig(cat);
                     const CatIcon = config.icon;
                     return (
-                      <SelectItem key={cat} value={cat}>
+                      <SelectItem key={cat} value={cat} className="cursor-pointer">
                         <div className="flex items-center gap-2">
                           <CatIcon className="w-4 h-4" style={{ color: config.color }} />
-                          {cat}
+                          {t('cat.' + cat)}
                         </div>
                       </SelectItem>
                     );
@@ -82,7 +84,7 @@ export default function NewEntry({ onPageChange }: NewEntryProps) {
 
             <div className="space-y-2">
               <Label>{t('entry.date')}</Label>
-              <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
+              <DatePickerSimple date={date} setDate={setDate} />
             </div>
 
             <div className="space-y-2">

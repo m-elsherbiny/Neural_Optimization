@@ -9,7 +9,7 @@ interface I18nContextType {
   isRTL: boolean;
 }
 
-const translations: Record<string, Record<Lang, string>> = {
+export const translations: Record<string, Record<Lang, string>> = {
   // Sidebar
   'nav.smartInput': { en: 'Smart Input', ar: 'الإدخال الذكي' },
   'nav.allocation': { en: 'Allocation', ar: 'توزيع الميزانية' },
@@ -17,6 +17,7 @@ const translations: Record<string, Record<Lang, string>> = {
   'nav.transactions': { en: 'Transactions', ar: 'المعاملات' },
   'nav.newExpense': { en: 'New Expense', ar: 'مصروف جديد' },
   'nav.about': { en: 'About', ar: 'حول المشروع' },
+  'nav.limits': { en: 'Limits', ar: 'الحدود' },
   'sidebar.smartBudget': { en: 'Smart Budget', ar: 'الميزانية الذكية' },
   'sidebar.darkMode': { en: 'Dark Mode', ar: 'الوضع الداكن' },
   'sidebar.lightMode': { en: 'Light Mode', ar: 'الوضع الفاتح' },
@@ -29,9 +30,11 @@ const translations: Record<string, Record<Lang, string>> = {
   'desc.transactions': { en: 'See what you spent your money on and when', ar: 'اطّلع على أين أنفقت أموالك ومتى' },
   'desc.newExpense': { en: 'Quickly log a new expense to keep your budget on track', ar: 'سجّل مصروفاً جديداً بسرعة للحفاظ على ميزانيتك' },
   'desc.about': { en: 'Learn about the project and the team behind it', ar: 'تعرّف على المشروع والفريق الذي يقف وراءه' },
+  'desc.limits': { en: 'Set and track spending limits for different categories', ar: 'تحديد وتتبع حدود الإنفاق للفئات المختلفة' },
+  'header.balance': { en: 'Balance', ar: 'الرصيد' },
 
   // Smart Input
-  'smart.poweredBy': { en: 'Powered by Neural Network (MLPClassifier) + Linear Programming (PuLP)', ar: 'مدعوم بالشبكة العصبية (MLPClassifier) + البرمجة الخطية (PuLP)' },
+  'smart.poweredBy': { en: 'Powered by Neural Network (MLPClassifier) + Linear Programming (PuLP)', ar: 'Powered by Neural Network (MLPClassifier) + Linear Programming (PuLP)' },
   'smart.describe': { en: 'Describe your finances', ar: 'صِف أمورك المالية' },
   'smart.describeHint': { en: 'Mention your income, expenses, and savings goals in plain English. The AI will automatically categorize and extract everything.', ar: 'اذكر دخلك ومصاريفك وأهداف التوفير بنص عادي. سيقوم الذكاء الاصطناعي بتصنيف واستخراج كل شيء تلقائياً.' },
   'smart.useExample': { en: 'Use Example', ar: 'استخدم مثالاً' },
@@ -120,6 +123,7 @@ const translations: Record<string, Record<Lang, string>> = {
   'ledger.noDescription': { en: 'No description', ar: 'بدون وصف' },
   'ledger.expenseBreakdown': { en: 'Expense Breakdown', ar: 'تفصيل المصروفات' },
   'ledger.spendingOverTime': { en: 'Spending Over Time', ar: 'الإنفاق عبر الزمن' },
+  'ledger.amount': { en: 'Amount', ar: 'المبلغ' },
 
   // New Entry
   'entry.logExpense': { en: 'Log a New Expense', ar: 'تسجيل مصروف جديد' },
@@ -151,6 +155,48 @@ const translations: Record<string, Record<Lang, string>> = {
   // Common
   'common.loading': { en: 'Loading...', ar: 'جارٍ التحميل...' },
   'common.items': { en: 'Items', ar: 'عناصر' },
+
+  // Categories
+  'cat.Housing': { en: 'Housing', ar: 'السكن' },
+  'cat.Transport': { en: 'Transport', ar: 'المواصلات' },
+  'cat.Food': { en: 'Food', ar: 'الطعام' },
+  'cat.Entertainment': { en: 'Entertainment', ar: 'الترفيه' },
+  'cat.Utilities': { en: 'Utilities', ar: 'المرافق' },
+  'cat.Subscription': { en: 'Subscription', ar: 'الاشتراكات' },
+  'cat.Healthcare': { en: 'Healthcare', ar: 'الرعاية الصحية' },
+  'cat.Shopping': { en: 'Shopping', ar: 'التسوق' },
+  'cat.Education': { en: 'Education', ar: 'التعليم' },
+  'cat.Charity': { en: 'Charity', ar: 'الأعمال الخيرية' },
+  'cat.Other': { en: 'Other', ar: 'أخرى' },
+
+  // Limits
+  'limits.tracking': { en: 'Tracking', ar: 'تتبع' },
+  'limits.activeLimits': { en: 'active limits', ar: 'حدود نشطة' },
+  'limits.newLimit': { en: 'New Limit', ar: 'حد جديد' },
+  'limits.addLimit': { en: 'Add Spending Limit', ar: 'إضافة حد للإنفاق' },
+  'limits.addLimitDesc': { en: 'Set a maximum amount you want to spend on a specific category.', ar: 'حدد الحد الأقصى للمبلغ الذي تريد إنفاقه على فئة معينة.' },
+  'limits.limitAmount': { en: 'Limit Amount ($)', ar: '($) قيمة الحد' },
+  'limits.saveLimit': { en: 'Save Limit', ar: 'حفظ الحد' },
+  'limits.noLimits': { en: 'No limits set yet.', ar: 'لم يتم تحديد حدود بعد.' },
+  'limits.leftOf': { en: 'left of', ar: 'متبقي من' },
+  'limits.overLimit': { en: 'over limit of', ar: 'تجاوز الحد البالغ' },
+
+  // Income Sources
+  'income.Salary': { en: 'Salary', ar: 'الراتب' },
+  'income.Freelance': { en: 'Freelance', ar: 'العمل الحر' },
+  'income.Dividends': { en: 'Dividends', ar: 'أرباح الأسهم' },
+  'income.Rental': { en: 'Rental', ar: 'الإيجارات' },
+  'income.Side Business': { en: 'Side Business', ar: 'عمل جانبي' },
+  'income.Other': { en: 'Other', ar: 'أخرى' },
+
+  // Frequency
+  'freq.Daily': { en: 'Daily', ar: 'يومياً' },
+  'freq.Weekly': { en: 'Weekly', ar: 'أسبوعياً' },
+  'freq.Bi-Weekly': { en: 'Bi-Weekly', ar: 'كل أسبوعين' },
+  'freq.Monthly': { en: 'Monthly', ar: 'شهرياً' },
+  'freq.Annually': { en: 'Annually', ar: 'سنوياً' },
+  'freq.Yearly': { en: 'Yearly', ar: 'سنوياً' },
+  'freq.Occasionally': { en: 'Occasionally', ar: 'من حين لآخر' },
 };
 
 const I18nContext = createContext<I18nContextType>({

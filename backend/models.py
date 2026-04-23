@@ -28,6 +28,11 @@ class Goal(BaseModel):
     is_favourite: bool = False
     icon: str = "target"
 
+class Limit(BaseModel):
+    id: Optional[int] = None
+    category: str
+    amount: float
+
 class ExpenseLogRequest(BaseModel):
     text: str
 
@@ -58,21 +63,28 @@ class ParsedGoal(BaseModel):
     is_favourite: bool = False
     icon: str = "target"
 
+class ParsedLimit(BaseModel):
+    category: str
+    amount: float
+
 class SmartParseResponse(BaseModel):
     expenses: List[ParsedExpense] = []
     incomes: List[ParsedIncome] = []
     goals: List[ParsedGoal] = []
+    limits: List[ParsedLimit] = []
     raw_text: str
 
 class BulkSaveRequest(BaseModel):
     expenses: List[ParsedExpense] = []
     incomes: List[ParsedIncome] = []
     goals: List[ParsedGoal] = []
+    limits: List[ParsedLimit] = []
 
 class BulkSaveResponse(BaseModel):
     saved_expenses: int = 0
     saved_incomes: int = 0
     saved_goals: int = 0
+    saved_limits: int = 0
 
 # --- Optimization Models ---
 class GoalAllocation(BaseModel):

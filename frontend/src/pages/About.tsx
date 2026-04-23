@@ -1,25 +1,24 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Brain, LineChart, Sparkles, Users, Code2, Database } from 'lucide-react';
-import { useI18n } from '../lib/i18n';
+import { Brain, LineChart, Sparkles, Users, Code2, Database, User, UserRound } from 'lucide-react';
+import { translations } from '../lib/i18n';
 
 const TEAM = [
-  { name: 'Mahmoud El-Sherbiny', role: { en: 'Developer', ar: 'مطوّر' } },
-  { name: 'Mohamed Tamer', role: { en: 'Developer', ar: 'مطوّر' } },
-  { name: 'Ahmed Raed', role: { en: 'Developer', ar: 'مطوّر' } },
-  { name: 'Jana', role: { en: 'Developer', ar: 'مطوّرة' } },
+  { name: 'Mahmoud El-Sherbiny', gender: 'm' },
+  { name: 'Mohamed Tamer', gender: 'm' },
+  { name: 'Ahmed Raed', gender: 'm' },
+  { name: 'Jana Mohamed', gender: 'f' },
 ];
 
 const TECH = [
-  { name: 'React + TypeScript', desc: { en: 'Frontend Framework', ar: 'إطار الواجهة الأمامية' }, icon: Code2 },
-  { name: 'FastAPI (Python)', desc: { en: 'Backend API', ar: 'واجهة الخادم' }, icon: Database },
-  { name: 'MLPClassifier', desc: { en: 'Neural Network for Categorization', ar: 'شبكة عصبية للتصنيف' }, icon: Brain },
-  { name: 'PuLP (CBC Solver)', desc: { en: 'Linear Programming Optimizer', ar: 'محسّن البرمجة الخطية' }, icon: LineChart },
+  { name: 'React + TypeScript', desc: 'Frontend Framework', icon: Code2 },
+  { name: 'FastAPI (Python)', desc: 'Backend API', icon: Database },
+  { name: 'MLPClassifier', desc: 'Neural Network for Categorization', icon: Brain },
+  { name: 'PuLP (CBC Solver)', desc: 'Linear Programming Optimizer', icon: LineChart },
 ];
 
 export default function About() {
-  const { t, lang } = useI18n();
+  const t = (key: string) => translations[key]?.en || key;
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -88,7 +87,7 @@ export default function About() {
                   </div>
                   <div>
                     <p className="font-medium text-sm">{tech.name}</p>
-                    <p className="text-xs text-muted-foreground">{tech.desc[lang]}</p>
+                    <p className="text-xs text-muted-foreground">{tech.desc}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -106,17 +105,19 @@ export default function About() {
           {t('about.createdBy')}
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {TEAM.map((member) => (
+          {TEAM.map((member) => {
+            const MemberIcon = member.gender === 'f' ? UserRound : User;
+            return (
             <Card key={member.name} className="hover:shadow-sm transition-shadow">
               <CardContent className="pt-5 text-center space-y-2">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto text-primary font-bold text-lg">
-                  {member.name.charAt(0)}
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto text-white ${member.gender === 'f' ? 'bg-pink-500' : 'bg-primary'}`}>
+                  <MemberIcon className="w-6 h-6" />
                 </div>
                 <p className="font-semibold text-sm">{member.name}</p>
-                <Badge variant="secondary" className="text-[10px]">{member.role[lang]}</Badge>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
